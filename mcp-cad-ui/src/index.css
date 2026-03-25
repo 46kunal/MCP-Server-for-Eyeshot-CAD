@@ -1,0 +1,68 @@
+:root {
+  --bg-app: #1e1e1e;
+  --bg-panel: #252526;
+  --bg-input: #1e1e1e;
+  --bg-hover: #2a2d2e;
+  --bg-active: #37373d;
+  --bg-toolbar: #2d2d30;
+  --border: #3e3e42;
+  --text: #cccccc;
+  --text-muted: #858585;
+  --text-bright: #e0e0e0;
+  --accent: #0078d4;
+  --accent-hover: #1a8ae8;
+  --success: #4ec94e;
+  --error: #f14c4c;
+  --warning: #cca700;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Roboto', 'Segoe UI', sans-serif;
+  background: var(--bg-app);
+  color: var(--text);
+  font-size: 13px;
+  overflow: hidden;
+  height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+.mono { font-family: 'Roboto Mono', monospace; }
+
+.panel {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+  user-select: none;
+}
+
+.panel-body {
+  padding: 8px;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+input {
+  font-family: inherit;
+}
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #555; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #777; }
