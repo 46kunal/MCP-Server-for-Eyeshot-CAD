@@ -6,10 +6,27 @@ logger = setup_logger("cad_engine")
 class MockCADEngine:
     def __init__(self):
         self.state = {
+            "shape": "box",
             "volume": 0.0,
             "dimensions": {}
         }
     
+    def create_shape(self, shape_type: str, dimensions: Dict[str, Any] = None) -> Dict[str, Any]:
+        dimensions = dimensions or {}
+        logger.info(f"Creating shape: {shape_type} with dimensions {dimensions}")
+        self.state["shape"] = shape_type
+        self.state["dimensions"] = dimensions
+        
+        return {
+            "status": "success",
+            "message": f"Successfully generated a {shape_type}.",
+            "data": {
+                "feature": "shape_type",
+                "new_value": shape_type,
+                "dimensions": dimensions
+            }
+        }
+
     def modify_dimension(self, feature: str, value: float, unit: str) -> Dict[str, Any]:
         logger.info(f"Modifying dimension: {feature} to {value}{unit}")
         if feature not in self.state["dimensions"]:
