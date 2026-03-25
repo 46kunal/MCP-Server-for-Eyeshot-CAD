@@ -16,24 +16,29 @@ class CommandResponse(BaseModel):
     status: str
     message: str
     data: Optional[dict] = None
+    # NEW optional fields (backward compatible — old responses omit these)
+    color: Optional[str] = None
+    mesh_url: Optional[str] = None
+    object_id: Optional[str] = None
 
 @router.post("/command", response_model=CommandResponse)
 async def process_command(request: CommandRequest):
     logger.info(f"Received API command request: {request.prompt}")
     
     try:
-        # Step 1: LLM interprets the prompt and gives us the function to call
         structured_command = generate_cad_command(request.prompt)
         function_name = structured_command["function"]
         arguments = structured_command["arguments"]
         
-        # Step 2: Route to mocked CAD Engine
         result = cad_engine.execute_command(function_name, arguments)
         
         return CommandResponse(
-            status=result["status"],
-            message=result["message"],
-            data=result.get("data")
+            status=result.get("status", "success"),
+            message=result.get("message", ""),
+            data=result.get("data"),
+            color=result.get("color"),
+            mesh_url=result.get("mesh_url"),
+            object_id=result.get("object_id")
         )
 
     except ValueError as ve:

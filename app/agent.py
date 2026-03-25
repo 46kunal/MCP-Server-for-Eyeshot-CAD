@@ -3,6 +3,7 @@ import requests
 from typing import Dict, Any
 from .utils import setup_logger
 from .parser import extract_and_parse_json
+from .mcp.tool_registry import tool_registry
 
 logger = setup_logger("agent")
 
@@ -11,18 +12,21 @@ GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
 DEFAULT_MODEL = "llama-3.3-70b-versatile"
 
-SYSTEM_PROMPT = """You are a CAD assistant converting natural language to predefined JSON function calls.
+SYSTEM_PROMPT_HEADER = """You are a CAD assistant converting natural language to predefined JSON function calls.
 Convert user commands into JSON function calls ONLY. 
 
 Available functions:
-1. "create_shape" - Arguments: {"shape_type": str, "dimensions": dict} (Valid shapes: "box", "sphere", "cylinder", "cone", "torus")
-2. "modify_dimension" - Arguments: {"feature": str, "value": float, "unit": str}
-3. "get_volume" - Arguments: {"unit": str}
-4. "extrude" - Arguments: {"face": str, "distance": float, "unit": str}
+"""
 
+SYSTEM_PROMPT_FOOTER = """
 IMPORTANT: Return ONLY a JSON object in this exact format, no extra text:
 {"function": "<function_name>", "arguments": {...}}
 """
+
+def _build_system_prompt() -> str:
+    """Dynamically builds system prompt from registered tools."""
+    tools_desc = tool_registry.generate_prompt_description()
+    return SYSTEM_PROMPT_HEADER + tools_desc + SYSTEM_PROMPT_FOOTER
 
 def generate_cad_command(prompt: str, model: str = DEFAULT_MODEL) -> Dict[str, Any]:
     if not GROQ_API_KEY:
@@ -32,6 +36,8 @@ def generate_cad_command(prompt: str, model: str = DEFAULT_MODEL) -> Dict[str, A
             "export GROQ_API_KEY='your-key-here'"
         )
 
+    system_prompt = _build_system_prompt()
+
     headers = {
         "Authorization": f"Bearer {GROQ_API_KEY}",
         "Content-Type": "application/json"
@@ -40,7 +46,7 @@ def generate_cad_command(prompt: str, model: str = DEFAULT_MODEL) -> Dict[str, A
     payload = {
         "model": model,
         "messages": [
-            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "system", "content": system_prompt},
             {"role": "user", "content": prompt}
         ],
         "temperature": 0.1,
@@ -58,10 +64,8 @@ def generate_cad_command(prompt: str, model: str = DEFAULT_MODEL) -> Dict[str, A
     data = response.json()
     response_text = data["choices"][0]["message"]["content"]
     
-    # Parse the response to JSON
     parsed = extract_and_parse_json(response_text)
     
-    # Basic validation of the shape
     if "function" not in parsed or "arguments" not in parsed:
         raise ValueError("LLM returned JSON, but missing 'function' or 'arguments' keys.")
         
